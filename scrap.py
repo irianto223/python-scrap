@@ -10,67 +10,71 @@ BASE_URL = 'http://www.nanokomputer.com/'
 
 
 def get_homepage():
-  print("Fetching homepage ...")
+  print('Fetching homepage ...')
   
-  if os.path.exists("./data/html/homepage.html"):
-    print("homepage.html already exists.")
+  if os.path.exists('./data/html/homepage.html'):
+    print('homepage.html already exists.')
   else:
     homepage  = get(BASE_URL, {}, stream=True)
     parsed    = BeautifulSoup(homepage.content, 'html.parser')
-    f = open("./data/html/homepage.html", "a")
+    f = open('./data/html/homepage.html', 'a')
     f.write(parsed.prettify())
-    print("DONE.")  
+    f.close()
+    print('DONE.')  
 
 
 
 def get_megamenu_link():
-  f                             = open("./data/html/homepage.html", "r")
+  f                             = open('./data/html/homepage.html', 'r')
   homepage                      = BeautifulSoup(f.read(), 'html.parser')
   all_link_with_link_lev_class  = homepage.select('a[class^=link_lev_]')
 
-  print("Fetching mega menu link ...")
+  print('Fetching mega menu URL ...')
 
-  if os.path.exists("./data/txt/megamenu-link.txt"):
-    print("megamenu-link.txt already exists.")
+  if os.path.exists('./data/txt/megamenu-link.txt'):
+    print('megamenu-link.txt already exists.')
   else:
-    ff = open("./data/txt/megamenu-link.txt", "a")
+    ff = open('./data/txt/megamenu-link.txt', 'a')
     for i in all_link_with_link_lev_class:
       
       if 'daddy' in i['class']:
         continue
       else:
         if all_link_with_link_lev_class.index(i) < len(all_link_with_link_lev_class)-1:
-          ff.write(i['href']+"\n")
+          ff.write(i['href']+'\n')
+          print(i['href'])
         else:
           ff.write(i['href'])
     
     ff.close()
-    print("DONE.")
+    print('DONE.')
   
   f.close()
 
 
 
 def get_product_list_page():
-  print("Fetching product list page ...")
-  megamenu_total_line = sum(1 for line in open("./data/txt/megamenu-link.txt"))
+  print('Fetching product list page ...')
+  megamenu_total_line = sum(1 for line in open('./data/txt/megamenu-link.txt'))
 
-  if os.path.exists("./data/html/product-list/product-list-" + str(megamenu_total_line) + ".html"):
-    print("product list 1-" + str(megamenu_total_line) + " already exists.")
+  if os.path.exists('./data/html/product-list/product-list-' + str(megamenu_total_line) + '.html'):
+    print('product list 1-' + str(megamenu_total_line) + ' already exists.')
   else:
-    f     = open("./data/txt/megamenu-link.txt", "r")
+    f     = open('./data/txt/megamenu-link.txt', 'r')
     count = 1
     for data in f:
       product_list_page = get(data, {}, stream=True)
       parsed            = BeautifulSoup(product_list_page.content, 'html.parser')
-      ff = open("./data/html/product-list/product-list-" + str(count) + ".html", "a")
+      ff = open('./data/html/product-list/product-list-' + str(count) + '.html', 'a')
       ff.write(parsed.prettify())
       ff.close()
 
-      get_product_list_page_next(parsed, "product-list-" + str(count), 1)
+      print('product-list-' + str(count) + '.html')
+
+      get_product_list_page_next(parsed, 'product-list-' + str(count), 1)
 
       count += 1
-    print("DONE.")
+    print('DONE.')
 
 
 
@@ -86,8 +90,9 @@ def get_product_list_page_next(html, name_prefix, count):
       next_html         = parsed.prettify()
 
 
-      f = open("./data/html/product-list/" + name_prefix + "#"+ str(count+1) +".html", "a")
+      f = open('./data/html/product-list/' + name_prefix + '#'+ str(count+1) +'.html', 'a')
       f.write(parsed.prettify())
+      print(name_prefix + '#'+ str(count+1) +'.html')
       f.close()
       
       get_product_list_page_next(parsed, name_prefix, count+1)
@@ -96,10 +101,71 @@ def get_product_list_page_next(html, name_prefix, count):
   
 
 
-# def get_product_link():
-  # harusnya bisa dapat dengan kata kunci "<a href="http://www.nanokomputer.com/product_info.php?"
+def get_product_link():
+  print('Fetching product detail URL ...')
+  if os.path.exists('./data/txt/product-link.txt'):
+      print('product-link.txt already exists.')
+      return
+
+  file_list       = os.listdir('./data/html/product-list/')
+
+  for i in file_list:
+    ff = open('./data/html/product-list/' + i)
+    # ff.read()
+    html = BeautifulSoup(ff, 'html.parser')
+
+    tr              = html.select('tr[class^=productListing-odd]')
+    tr_even         = html.select('tr[class^=productListing-even]')
+    a               = []
+
+    for i in tr_even:
+      tr.append(i)
+    
+    for i in tr:
+      x = i.contents
+      # print(len(x))
+      if len(x) > 3:
+        a.append(x[3].contents[1]['href'])
+
+    f = open('./data/txt/product-link.txt', 'a')
+    for data in a:
+      print(data)
+      f.write(data + '\n')
+    f.close()
+    
+  ff.close()
+  print('DONE.')
+
+
+
+def get_product_page():
+  print('Fetching product detail page ...')
+
+  product_link_total_line = sum(1 for line in open('./data/txt/product-link.txt'))
+  url_list                = open('./data/txt/product-link.txt')
+
+  product_dir = os.listdir('./data/html/product-detail/')
+
+  if len(product_dir) >= product_link_total_line:
+    print('product detail 1-'+ str(product_link_total_line) + ' already exists.')
+    return
+
+  count = 1
+  for url in url_list:
+    html      = get(url, {}, stream=True)
+    parsed    = BeautifulSoup(html.content, 'html.parser')
+    ff        = open('./data/html/product-detail/product-detail-' + str(count) + '.html', 'a')
+    ff.write(parsed.prettify())
+    print('product-detail-' + str(count) + '.html')
+    ff.close()
+    count += 1
+  
+  url_list.close()
+  print('DONE.')
+
 
 get_homepage()
 get_megamenu_link()
 get_product_list_page()
-
+get_product_link()
+get_product_page()
