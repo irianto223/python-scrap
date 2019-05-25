@@ -1,1 +1,5 @@
-data/
+data/html/product-list/*
+data/html/product-detail/*
+data/html/*.html
+data/txt/*.txt
+data/json/*.json
