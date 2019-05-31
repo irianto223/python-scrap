@@ -1,4 +1,4 @@
-import os, sys, resource
+import os, sys, resource, csv
 from requests import get
 from bs4 import BeautifulSoup
 
@@ -164,8 +164,51 @@ def get_product_page():
   print('DONE.')
 
 
+
+def create_csv_file():
+  f           = open('./data/html/product-detail/product-detail-2.html')
+  html        = BeautifulSoup(f, 'html.parser')
+  post_title  = html.select_one('td[class^=pageHeadingN]').contents[0].strip().split('\t')[0]
+
+  attribute   = html.select('span[class^="smallText_SD]')[3].select('table')
+  
+  field_name_list = ['post_title']
+  rows            = [post_title]
+
+  table_counter   = 0
+  tr_counter      = 0
+
+  for i, table in enumerate(attribute):
+    table_counter += 1
+    
+    tbody = table.contents[1]
+    
+    for k, tr in enumerate(tbody):
+
+      if tr != '\n':
+        tr_counter += 1
+        field_name_list.append('attribute_name_' + str(tr_counter))
+        field_name_list.append('attribute_value_' + str(tr_counter))
+
+        attribute_name  = tr.contents[1].contents[1].contents[0].strip().split('\n')[0]
+        attribute_value = tr.contents[3].contents[1].contents[0].strip().split('\n')[0]
+
+        rows.append(attribute_name)
+        rows.append(attribute_value)
+
+  csv_file    = open('./data/csv/test.csv', 'w', newline='')
+  csv_writer  = csv.writer(csv_file, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+
+  csv_writer.writerow(field_name_list)
+  csv_writer.writerow(rows)
+
+  csv_file.close()
+
+
+
 get_homepage()
 get_megamenu_link()
 get_product_list_page()
 get_product_link()
 get_product_page()
+create_csv_file()
