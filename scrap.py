@@ -170,15 +170,38 @@ def create_csv_file():
   html        = BeautifulSoup(f, 'html.parser')
   post_title  = html.select_one('td[class^=pageHeadingN]').contents[0].strip().split('\t')[0]
 
-  attribute   = html.select('span[class^="smallText_SD]')[3].select('table')
+  content_table             = html.select('span[class^="smallText_SD]')[3].select('table')
+  header_nav                = html.select('td[class^=headerNavigation]')[0].select('a')
+  categories_list           = []
+  categories                = []
+  categories_split_by_arrow = []
+
+  for i in header_nav:
+    cat = i.contents[0].strip()
+    categories_list.append(cat)
+
+  sku = categories_list[len(categories_list)-1]
+
+  categories_list.remove('Home')
+  categories_list.remove('Katalog')
+  categories_list.remove(sku)
+
+  for i, cat in enumerate(categories_list):
+    arr = categories_list[0:(i+1)]
+    categories.append(arr)
   
-  field_name_list = ['post_title']
-  rows            = [post_title]
+  for cat in categories:
+    categories_split_by_arrow.append('>'.join(cat))
+
+  categories_split_by_comma = ','.join(categories_split_by_arrow)
+
+  field_name_list = ['post_title', 'published', 'sku', 'type', 'categories', 'regular_price', 'post_excerpt', 'post_content', 'images']
+  rows            = [post_title, 'ZONK!', sku, 'simple', categories_split_by_comma, 'ZONK!', 'ZONK!', 'ZONK!', 'ZONK!']
 
   table_counter   = 0
   tr_counter      = 0
 
-  for i, table in enumerate(attribute):
+  for i, table in enumerate(content_table):
     table_counter += 1
     
     tbody = table.contents[1]
@@ -187,8 +210,8 @@ def create_csv_file():
 
       if tr != '\n':
         tr_counter += 1
-        field_name_list.append('attribute_name_' + str(tr_counter))
-        field_name_list.append('attribute_value_' + str(tr_counter))
+        field_name_list.append('Attribute ' + str(tr_counter) + ' name')
+        field_name_list.append('Attribute ' + str(tr_counter) + ' value(s)')
 
         attribute_name  = tr.contents[1].contents[1].contents[0].strip().split('\n')[0]
         attribute_value = tr.contents[3].contents[1].contents[0].strip().split('\n')[0]
