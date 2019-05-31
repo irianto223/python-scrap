@@ -170,11 +170,20 @@ def create_csv_file():
   html        = BeautifulSoup(f, 'html.parser')
   post_title  = html.select_one('td[class^=pageHeadingN]').contents[0].strip().split('\t')[0]
 
-  content_table             = html.select('span[class^="smallText_SD]')[3].select('table')
+  content_table             = html.select('span[class^=smallText_SD]')[3].select('table')
   header_nav                = html.select('td[class^=headerNavigation]')[0].select('a')
+  price_heading             = html.select('td[class^=pageHeadingP]')[0].contents[0].strip()
   categories_list           = []
   categories                = []
   categories_split_by_arrow = []
+  price_heading             = 0
+
+  
+  # di sini validasi jika harga tidakkosong
+  # maka update variabel harga di atas
+  
+  if price_heading != '':
+    print('Harga ADA!')
 
   for i in header_nav:
     cat = i.contents[0].strip()
