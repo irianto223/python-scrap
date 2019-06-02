@@ -69,7 +69,7 @@ def get_product_list_page():
       ff.write(parsed.prettify())
       ff.close()
 
-      print('product-list-' + str(count) + '.html')
+      print('Creating product-list-' + str(count) + '.html < ' + data.strip())
 
       get_product_list_page_next(parsed, 'product-list-' + str(count), 1)
 
@@ -92,7 +92,7 @@ def get_product_list_page_next(html, name_prefix, count):
 
       f = open('./data/html/product-list/' + name_prefix + '#'+ str(count+1) +'.html', 'a')
       f.write(parsed.prettify())
-      print(name_prefix + '#'+ str(count+1) +'.html')
+      print('Creating ' + name_prefix + '#'+ str(count+1) +'.html < ' + i['href'].strip())
       f.close()
       
       get_product_list_page_next(parsed, name_prefix, count+1)
@@ -156,7 +156,7 @@ def get_product_page():
     parsed    = BeautifulSoup(html.content, 'html.parser')
     ff        = open('./data/html/product-detail/product-detail-' + str(count) + '.html', 'a')
     ff.write(parsed.prettify())
-    print('product-detail-' + str(count) + '.html')
+    print('Creating product-detail-' + str(count) + '.html < ' + url.strip())
     ff.close()
     count += 1
   
@@ -176,14 +176,21 @@ def create_csv_file():
   categories_list           = []
   categories                = []
   categories_split_by_arrow = []
-  price_heading             = 0
+  price                     = 0
 
   
   # di sini validasi jika harga tidakkosong
   # maka update variabel harga di atas
   
   if price_heading != '':
-    print('Harga ADA!')
+    x = price_heading
+    y = []
+    for s in x:
+      if s.isdigit():
+        y.append(s)
+
+    z = ''.join(y)
+    price = int(z)
 
   for i in header_nav:
     cat = i.contents[0].strip()
@@ -203,9 +210,13 @@ def create_csv_file():
     categories_split_by_arrow.append('>'.join(cat))
 
   categories_split_by_comma = ','.join(categories_split_by_arrow)
+  published                = 0
+
+  if price != 0:
+    published = 1
 
   field_name_list = ['post_title', 'published', 'sku', 'type', 'categories', 'regular_price', 'post_excerpt', 'post_content', 'images']
-  rows            = [post_title, 'ZONK!', sku, 'simple', categories_split_by_comma, 'ZONK!', 'ZONK!', 'ZONK!', 'ZONK!']
+  rows            = [post_title, published, sku, 'simple', categories_split_by_comma, price, 'ZONK!', 'ZONK!', 'ZONK!']
 
   table_counter   = 0
   tr_counter      = 0
