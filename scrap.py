@@ -1,4 +1,4 @@
-import os, sys, resource, csv
+import os, sys, resource, csv, urllib.parse
 from requests import get
 from bs4 import BeautifulSoup
 
@@ -171,14 +171,27 @@ def create_csv_file():
   post_title  = html.select_one('td[class^=pageHeadingN]').contents[0].strip().split('\t')[0]
 
   content_table             = html.select('span[class^=smallText_SD]')[3].select('table')
+  short_desc_table          = html.select('span[class^=smallText_SD]')[1].contents
+  short_desc_list           = []
   header_nav                = html.select('td[class^=headerNavigation]')[0].select('a')
   price_heading             = html.select('td[class^=pageHeadingP]')[0].contents[0].strip()
+  image                     = html.select('td[class^=main]')[2].contents[1].contents[1].contents[1].contents[3].contents[1].get('href')
+  content                   = html.find_all('td')
   categories_list           = []
   categories                = []
   categories_split_by_arrow = []
   price                     = 0
 
+  print(content)
+  print(len(content))
+
+  for i, data in enumerate(short_desc_table):
+    string = str(data)
+    if string.strip() != '<br/>':
+      short_desc_list.append(string.replace('\n', '').strip())
   
+  excerpt = '. '.join(short_desc_list)
+
   # di sini validasi jika harga tidakkosong
   # maka update variabel harga di atas
   
@@ -216,7 +229,7 @@ def create_csv_file():
     published = 1
 
   field_name_list = ['post_title', 'published', 'sku', 'type', 'categories', 'regular_price', 'post_excerpt', 'post_content', 'images']
-  rows            = [post_title, published, sku, 'simple', categories_split_by_comma, price, 'ZONK!', 'ZONK!', 'ZONK!']
+  rows            = [post_title, published, sku, 'simple', categories_split_by_comma, price, excerpt, 'ZONK!', image]
 
   table_counter   = 0
   tr_counter      = 0
