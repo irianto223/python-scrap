@@ -83,11 +83,9 @@ def get_product_list_page_next(html, name_prefix, count):
   page_results  = html.select('a[class^=pageResults]')
 
   for i in page_results:
-    should_stop = True
     if i['title'] == ' Next Page ':
       product_list_page = get(i['href'], {}, stream=True)
       parsed            = BeautifulSoup(product_list_page.content, 'html.parser')
-      next_html         = parsed.prettify()
 
 
       f = open('./data/html/product-list/' + name_prefix + '#'+ str(count+1) +'.html', 'a')
@@ -176,21 +174,19 @@ def create_csv_file():
   header_nav                = html.select('td[class^=headerNavigation]')[0].select('a')
   price_heading             = html.select('td[class^=pageHeadingP]')[0].contents[0].strip()
   image                     = html.select('td[class^=main]')[2].contents[1].contents[1].contents[1].contents[3].contents[1].get('href')
-  content                   = html.find_all('td')
+  plain_content             = []
   categories_list           = []
   categories                = []
   categories_split_by_arrow = []
   price                     = 0
 
-  print(content)
-  print(len(content))
-
   for i, data in enumerate(short_desc_table):
     string = str(data)
-    if string.strip() != '<br/>':
-      short_desc_list.append(string.replace('\n', '').strip())
+    # if string.strip() != '<br/>':
+    #   short_desc_list.append(string.replace('\n', '').strip())
+    short_desc_list.append(string.replace('\n', '').strip())
   
-  excerpt = '. '.join(short_desc_list)
+  excerpt = ''.join(short_desc_list)
 
   # di sini validasi jika harga tidakkosong
   # maka update variabel harga di atas
@@ -229,7 +225,7 @@ def create_csv_file():
     published = 1
 
   field_name_list = ['post_title', 'published', 'sku', 'type', 'categories', 'regular_price', 'post_excerpt', 'post_content', 'images']
-  rows            = [post_title, published, sku, 'simple', categories_split_by_comma, price, excerpt, 'ZONK!', image]
+  rows            = [post_title, published, sku, 'simple', categories_split_by_comma, price, excerpt, '', image]
 
   table_counter   = 0
   tr_counter      = 0
@@ -239,26 +235,61 @@ def create_csv_file():
     
     tbody = table.contents[1]
     
-    for k, tr in enumerate(tbody):
+    for tr in tbody:
 
       if tr != '\n':
         tr_counter += 1
-        field_name_list.append('Attribute ' + str(tr_counter) + ' name')
-        field_name_list.append('Attribute ' + str(tr_counter) + ' value(s)')
+        # field_name_list.append('Attribute ' + str(tr_counter) + ' name')
+        # field_name_list.append('Attribute ' + str(tr_counter) + ' value(s)')
 
         attribute_name  = tr.contents[1].contents[1].contents[0].strip().split('\n')[0]
         attribute_value = tr.contents[3].contents[1].contents[0].strip().split('\n')[0]
 
+        if attribute_name == '':
+          attribute_name = tr.contents[1].contents[1].contents[1].contents[0].strip().split('\n')[0]
+        
+        if attribute_value == '':
+          attribute_value = tr.contents[3].contents[1].contents[1].contents[0].strip().split('\n')[0]
+
         rows.append(attribute_name)
         rows.append(attribute_value)
 
-  csv_file    = open('./data/csv/test.csv', 'w', newline='')
-  csv_writer  = csv.writer(csv_file, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        plain_content.append(str(tr.contents[1].contents[1]).replace('      ', '').replace('     ', '').strip())
+        plain_content.append(str(tr.contents[3].contents[1]).replace('      ', '').replace('     ', '').strip())
 
-  csv_writer.writerow(field_name_list)
+  rows[7] = ''.join(plain_content).replace('\n', '').replace(';', '').strip()
+
+  i = 1
+  while i <= 100:
+    field_name_list.append('Attribute ' + str(i) + ' name')
+    field_name_list.append('Attribute ' + str(i) + ' value(s)')
+    i += 1
+
+  f_to_read   = open('./data/csv/test.csv')
+  f_to_write  = open('./data/csv/test.csv', 'a')
+  csv_reader  = csv.reader(f_to_read.readlines(), delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+  csv_writer  = csv.writer(f_to_write, delimiter=';', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+  total_line  = sum(1 for line in csv_reader)
+
+  if total_line == 0:
+    csv_writer.writerow(field_name_list)
   csv_writer.writerow(rows)
 
-  csv_file.close()
+  # print(csv_reader)
+
+  # line_to_override = {1:field_name_list}
+
+  # for i, row in enumerate(csv_reader):
+  #   if i == 0:
+  #     if len(field_name_list) > len(row):
+  #       data = line_to_override.get(i, row)
+  #       # csv_writer.writerow(data)
+  #       print('TEST!')
+  #       print(data)
+
+
+  f_to_read.close()
+  f_to_write.close()
 
 
 
