@@ -163,10 +163,16 @@ def get_product_page():
 
 
 
-def create_csv_file():
-  f           = open('./data/html/product-detail/product-detail-2.html')
+def create_csv_file(f):
+
+  # f           = open('./data/html/product-detail/product-detail-1511.html')
+
+  print('Writing new row in CSV file from ' + f.name)
+
   html        = BeautifulSoup(f, 'html.parser')
   post_title  = html.select_one('td[class^=pageHeadingN]').contents[0].strip().split('\t')[0]
+  
+  # print(html)
 
   content_table             = html.select('span[class^=smallText_SD]')[3].select('table')
   short_desc_table          = html.select('span[class^=smallText_SD]')[1].contents
@@ -242,14 +248,26 @@ def create_csv_file():
         # field_name_list.append('Attribute ' + str(tr_counter) + ' name')
         # field_name_list.append('Attribute ' + str(tr_counter) + ' value(s)')
 
-        attribute_name  = tr.contents[1].contents[1].contents[0].strip().split('\n')[0]
-        attribute_value = tr.contents[3].contents[1].contents[0].strip().split('\n')[0]
+        # print(tr.contents[1])
+        # print('===================================================')
+        # print(tr.contents[3].contents[1])
 
-        if attribute_name == '':
-          attribute_name = tr.contents[1].contents[1].contents[1].contents[0].strip().split('\n')[0]
+        try:
+          attribute_name  = tr.contents[1].contents[1].contents[0].strip().split('\n')[0]
+        except:
+          attribute_name  = ""
+
+        try:
+          attribute_value = tr.contents[3].contents[1].contents[0].strip().split('\n')[0]
+        except:
+          attribute_value = ""
+
+
+        # if attribute_name == '':
+        #   attribute_name = tr.contents[1].contents[1].contents[1].contents[0].strip().split('\n')[0]
         
-        if attribute_value == '':
-          attribute_value = tr.contents[3].contents[1].contents[1].contents[0].strip().split('\n')[0]
+        # if attribute_value == '':
+        #   attribute_value = tr.contents[3].contents[1].contents[1].contents[0].strip().split('\n')[0]
 
         rows.append(attribute_name)
         rows.append(attribute_value)
@@ -293,9 +311,21 @@ def create_csv_file():
 
 
 
+def create_csv_files():
+  file_list       = os.listdir('./data/html/product-detail/')
+
+  for i in file_list:
+    try:
+      f = open('./data/html/product-detail/' + i)
+      create_csv_file(f)
+      f.close()
+    except (IndexError, AttributeError):
+      continue
+
 get_homepage()
 get_megamenu_link()
 get_product_list_page()
 get_product_link()
 get_product_page()
-create_csv_file()
+# create_csv_file()
+create_csv_files()
